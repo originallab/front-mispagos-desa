@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
+import {
   Plus,
   Edit,
   Link,
@@ -22,6 +22,10 @@ import { MethodUtils } from '../../Api/utils/methodUtils';
 import { AppUtils } from '../../Api/utils/appUtils';
 import { UserUtils } from '../../Api/utils/userUtils';
 import { PayMethodAppUtils } from '../../Api/utils/PayMethodAppUtils'; // ✅ IMPORTAR UTILIDAD FALTANTE
+
+// 🔧 NOTA: Este código incluye funciones de debugging temporales (debugCreateRelation, createCleanRelationPayload, validateRelationData)
+// 🔧 para resolver el problema de objetos anidados en las llamadas a la API de relaciones.
+// 🔧 Una vez resuelto el problema, estas funciones pueden ser simplificadas.
 
 const PayMethod = () => {
   // Estados del componente
@@ -49,13 +53,13 @@ const PayMethod = () => {
     global: 0,        // Campo real (0 = local, 1 = global)
     country_id: 'MX'  // Campo real
   });
-  
+
   const [createForm, setCreateForm] = useState({
     method_name: '',  // Campo real
     global: 0,        // Campo real
     country_id: 'MX'  // Campo real
   });
-  
+
   const [selectedApps, setSelectedApps] = useState([]);
 
   useEffect(() => {
@@ -66,9 +70,9 @@ const PayMethod = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('🔄 Iniciando carga de datos...');
-      
+
       // ✅ CORREGIDO: Cargar también las relaciones paymethod_app
       const [methodsData, appsData, payMethodAppsData] = await Promise.all([
         MethodUtils.getAllMethods().catch(err => {
@@ -93,23 +97,23 @@ const PayMethod = () => {
         console.warn('No se pudo cargar el usuario, usando datos por defecto');
         userData = { email: 'admin@test.com', user_id: 1 };
       }
-      
-      console.log('✅ Datos cargados:', { 
+
+      console.log('✅ Datos cargados:', {
         methods: methodsData?.length || 0,
         apps: appsData?.length || 0,
         relations: payMethodAppsData?.length || 0,
         userData
       });
-      
+
       setMethods(methodsData || []);
       setApps(appsData || []);
       setPayMethodApps(payMethodAppsData || []); // ✅ NUEVO
       setUser(userData);
-      
+
       // ✅ CORREGIDO: Combinar con datos reales de la BD
       const combined = combineMethodsWithApps(methodsData || [], appsData || [], payMethodAppsData || []);
       setCombinedData(combined);
-      
+
     } catch (err) {
       console.error('❌ Error al inicializar componente:', err);
       setError(`Error al cargar los datos: ${err.message}`);
@@ -123,25 +127,25 @@ const PayMethod = () => {
     try {
       return methodsData.map(method => {
         const methodId = method.method_id || method.id;
-        
+
         // ✅ NUEVO: Buscar aplicaciones asignadas realmente en la BD
-        const methodRelations = payMethodAppsData.filter(relation => 
+        const methodRelations = payMethodAppsData.filter(relation =>
           relation.method_id === methodId
         );
-        
+
         const assignedApps = methodRelations.map(relation => {
-          return appsData.find(app => 
+          return appsData.find(app =>
             (app.app_id || app.id) === relation.app_id
           );
         }).filter(Boolean); // Filtrar apps no encontradas
-        
+
         // Determinar el tipo basado en el campo global
         const isGlobal = method.global === 1 || method.global === '1';
         const type = isGlobal ? 'Global' : 'Local';
-        
+
         // Simular status para la UI (no existe en BD)
         const simulatedStatus = isGlobal ? 'activo' : 'inactivo';
-        
+
         return {
           // Datos básicos de la tabla method
           id: methodId,
@@ -150,16 +154,16 @@ const PayMethod = () => {
           method_name: method.method_name,
           global: method.global || 0,
           country_id: method.country_id || 'MX',
-          
+
           // Campos simulados para la UI
           status: simulatedStatus,
           commission: 0, // No existe en BD
           type: type,
-          
+
           // Fechas (si existen)
           created_at: method.created_at,
           updated_at: method.updated_at,
-          
+
           // Aplicaciones asignadas (datos reales)
           applications: assignedApps,
           applicationCount: assignedApps.length,
@@ -259,7 +263,7 @@ const PayMethod = () => {
 
   const closeModals = useCallback(() => {
     if (modalLoading) return;
-    
+
     setShowEditModal(false);
     setShowDeleteModal(false);
     setShowAssignModal(false);
@@ -286,12 +290,124 @@ const PayMethod = () => {
     }));
   }, []);
 
+  // ✅ SOLUCIÓN TEMPORAL: Bypass directo a la API
+  const debugCreateRelation = async (relationData) => {
+    console.log('🔧 BYPASS: Llamada directa a la API sin PayMethodAppUtils');
+    console.log('🔧 BYPASS: Datos a enviar:', relationData);
+
+    try {
+      // 🚀 LLAMADA DIRECTA A LA API (bypass de PayMethodAppUtils)
+      const response = await fetch('/api/paymethod_app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Agregar headers de autenticación si es necesario
+          // 'Authorization': 'Bearer your-token-here'
+        },
+        body: JSON.stringify(relationData) // ✅ Enviar datos directamente
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorData)}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ BYPASS: Respuesta exitosa:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ BYPASS: Error en llamada directa:', error);
+      throw error;
+    }
+  };
+
+  // ✅ NUEVO: Función específica para crear payload de relación limpio
+  const createCleanRelationPayload = (methodId, appId) => {
+    console.log('🧹 CREANDO payload limpio con:', { methodId, appId });
+    console.log('🧹 Tipos:', { methodId: typeof methodId, appId: typeof appId });
+
+    // Verificar que los parámetros no sean objetos
+    if (typeof methodId === 'object' || typeof appId === 'object') {
+      throw new Error(`Parámetros no pueden ser objetos. methodId: ${typeof methodId}, appId: ${typeof appId}`);
+    }
+
+    // Crear objeto completamente nuevo sin referencias
+    const payload = Object.create(null); // Sin prototype
+    payload.method_id = parseInt(methodId, 10);
+    payload.app_id = parseInt(appId, 10);
+
+    // Verificar que la conversión fue exitosa
+    if (isNaN(payload.method_id) || isNaN(payload.app_id)) {
+      throw new Error(`Error en conversión a números. method_id: ${payload.method_id}, app_id: ${payload.app_id}`);
+    }
+
+    // Convertir a objeto regular para API
+    const cleanPayload = {
+      method_id: payload.method_id,
+      app_id: payload.app_id
+    };
+
+    console.log('✨ Payload limpio creado:', cleanPayload);
+    console.log('✨ Verificación JSON:', JSON.stringify(cleanPayload));
+
+    return cleanPayload;
+  };
+
+  // ✅ NUEVO: Validar datos de relación antes de enviar
+  const validateRelationData = (relationData) => {
+    console.log('🔍 VALIDANDO datos de entrada:', relationData);
+    console.log('🔍 Tipo de relationData:', typeof relationData);
+    console.log('🔍 relationData.method_id:', relationData.method_id, typeof relationData.method_id);
+    console.log('🔍 relationData.app_id:', relationData.app_id, typeof relationData.app_id);
+
+    const errors = [];
+
+    // Verificar que relationData sea un objeto plano
+    if (typeof relationData !== 'object' || relationData === null) {
+      throw new Error(`relationData debe ser un objeto, recibido: ${typeof relationData}`);
+    }
+
+    // Verificar method_id
+    if (!relationData.hasOwnProperty('method_id')) {
+      errors.push('method_id es requerido');
+    } else if (isNaN(Number(relationData.method_id))) {
+      errors.push(`method_id debe ser un número, recibido: ${relationData.method_id} (${typeof relationData.method_id})`);
+    }
+
+    // Verificar app_id
+    if (!relationData.hasOwnProperty('app_id')) {
+      errors.push('app_id es requerido');
+    } else if (isNaN(Number(relationData.app_id))) {
+      errors.push(`app_id debe ser un número, recibido: ${relationData.app_id} (${typeof relationData.app_id})`);
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Datos de relación inválidos: ${errors.join(', ')}`);
+    }
+
+    // Crear objeto limpio con solo los campos necesarios
+    const cleanData = {
+      method_id: Number(relationData.method_id),
+      app_id: Number(relationData.app_id)
+    };
+
+    console.log('✅ Datos validados y limpiados:', cleanData);
+    return cleanData;
+  };
+
   // Función para mostrar errores de manera simple
   const showError = (error, operation) => {
     console.error(`❌ Error al ${operation}:`, error);
-    
+    console.error('❌ Estructura completa del error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: error.config
+    });
+
     let errorMessage = `Error al ${operation}`;
-    
+
     if (error.response?.status === 422) {
       const detail = error.response?.data?.detail;
       if (Array.isArray(detail)) {
@@ -302,31 +418,38 @@ const PayMethod = () => {
         errorMessage = `Errores de validación:\n${validationErrors}`;
       } else if (typeof detail === 'string') {
         errorMessage = `Error de validación: ${detail}`;
+      } else if (error.response?.data?.message) {
+        errorMessage = `Error de validación: ${error.response.data.message}`;
       }
     } else if (error.response?.data?.message) {
       errorMessage = error.response.data.message;
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
+
+    // Agregar información de debugging para development
+    if (process.env.NODE_ENV === 'development') {
+      errorMessage += `\n\nDetalles técnicos:\nStatus: ${error.response?.status}\nURL: ${error.config?.url}\nMethod: ${error.config?.method}\nData: ${JSON.stringify(error.config?.data, null, 2)}`;
+    }
+
     alert(errorMessage);
   };
 
   // ✅ CORREGIDO: Preparar solo datos que existen en la tabla method
   const prepareMethodData = (formData) => {
     const methodData = {};
-    
+
     // method_name es requerido
     if (formData.method_name && formData.method_name.trim()) {
       methodData.method_name = formData.method_name.trim();
     }
-    
+
     // global como entero (0 = local, 1 = global)
     methodData.global = parseInt(formData.global) || 0;
-    
+
     // country_id
     methodData.country_id = formData.country_id || 'MX';
-    
+
     console.log('📋 Datos preparados para tabla method:', methodData);
     return methodData;
   };
@@ -334,7 +457,7 @@ const PayMethod = () => {
   // ✅ CORREGIDO: Crear método y sus relaciones
   const handleCreateSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
+
     if (!createForm.method_name.trim()) {
       alert('El nombre del método es requerido');
       return;
@@ -342,38 +465,72 @@ const PayMethod = () => {
 
     try {
       setModalLoading(true);
-      
+
       // 1. Crear el método
       const methodData = prepareMethodData(createForm);
       console.log('📤 Creando método:', methodData);
-      
+
       const createdMethod = await MethodUtils.createMethod(methodData);
-      console.log('✅ Método creado:', createdMethod);
-      
-      const newMethodId = createdMethod.method_id || createdMethod.id;
-      
+      console.log('✅ Método creado - respuesta completa:', createdMethod);
+
+      // ✅ CORREGIDO: Extraer el ID correctamente
+      let newMethodId;
+      if (createdMethod && typeof createdMethod === 'object') {
+        // Si la respuesta es un objeto, buscar el ID
+        newMethodId = createdMethod.method_id || createdMethod.id || createdMethod.data?.method_id || createdMethod.data?.id;
+      } else {
+        // Si la respuesta es directamente el ID
+        newMethodId = createdMethod;
+      }
+
+      console.log('🔍 ID extraído para relaciones:', newMethodId, typeof newMethodId);
+
+      // Verificar que tenemos un ID válido
+      if (!newMethodId || isNaN(Number(newMethodId))) {
+        throw new Error(`ID de método inválido: ${newMethodId}. Respuesta del servidor: ${JSON.stringify(createdMethod)}`);
+      }
+
       // 2. ✅ NUEVO: Crear relaciones con aplicaciones seleccionadas
       if (selectedApps.length > 0) {
         console.log('📤 Creando relaciones con aplicaciones:', selectedApps);
-        
-        const relationPromises = selectedApps.map(appId => 
-          PayMethodAppUtils.createRelation({
-            method_id: newMethodId,
-            app_id: appId
-          })
-        );
-        
-        await Promise.all(relationPromises);
-        console.log('✅ Relaciones creadas exitosamente');
+        console.log('📤 Usando method_id:', Number(newMethodId));
+
+        // Crear relaciones una por una para mejor control de errores
+        for (const appId of selectedApps) {
+          console.log('🔄 PROCESANDO appId en CREATE:', appId, typeof appId);
+          console.log('🔄 newMethodId para usar:', newMethodId, typeof newMethodId);
+
+          try {
+            // ✅ USAR FUNCIÓN PARA CREAR PAYLOAD LIMPIO
+            const cleanPayload = createCleanRelationPayload(newMethodId, appId);
+
+            // ✅ VALIDAR DATOS ADICIONAL
+            const validatedData = validateRelationData(cleanPayload);
+            console.log('✅ Datos finales validados en CREATE:', validatedData);
+
+            // ✅ LLAMADA DIRECTA A PayMethodAppUtils con parámetros correctos
+            console.log('📡 LLAMANDO PayMethodAppUtils.createRelation con parámetros separados');
+            const relationResult = await PayMethodAppUtils.createRelation(validatedData.method_id, validatedData.app_id);
+            console.log('✅ Respuesta de PayMethodAppUtils.createRelation en CREATE:', relationResult);
+          } catch (relationError) {
+            console.error('❌ Error creando relación en CREATE:', relationError);
+            console.error('❌ newMethodId era:', newMethodId, typeof newMethodId);
+            console.error('❌ appId era:', appId, typeof appId);
+            throw relationError;
+          }
+        }
+
+        console.log('✅ Todas las relaciones creadas exitosamente');
       }
-      
+
       // Recargar datos
       await initializeComponent();
-      
+
       closeModals();
       alert(`Método "${createForm.method_name}" creado exitosamente con ${selectedApps.length} aplicaciones asignadas`);
-      
+
     } catch (err) {
+      console.error('❌ Error completo en handleCreateSubmit:', err);
       showError(err, 'crear método');
     } finally {
       setModalLoading(false);
@@ -383,7 +540,7 @@ const PayMethod = () => {
   // ✅ CORREGIDO: Editar método (solo datos de la tabla method)
   const handleEditSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
+
     if (!editForm.method_name.trim()) {
       alert('El nombre del método es requerido');
       return;
@@ -391,19 +548,19 @@ const PayMethod = () => {
 
     try {
       setModalLoading(true);
-      
+
       const methodData = prepareMethodData(editForm);
       console.log('📤 Editando método:', selectedMethod.id, methodData);
-      
+
       await MethodUtils.updateMethod(selectedMethod.id, methodData);
       console.log('✅ Método actualizado exitosamente');
-      
+
       // Recargar datos
       await initializeComponent();
-      
+
       closeModals();
       alert('Método actualizado exitosamente');
-      
+
     } catch (err) {
       showError(err, 'editar método');
     } finally {
@@ -415,18 +572,18 @@ const PayMethod = () => {
   const handleDeleteConfirm = useCallback(async () => {
     try {
       setModalLoading(true);
-      
+
       console.log('📤 Eliminando método:', selectedMethod.id);
-      
+
       await MethodUtils.deleteMethod(selectedMethod.id);
       console.log('✅ Método eliminado exitosamente');
-      
+
       // Recargar datos
       await initializeComponent();
-      
+
       closeModals();
       alert('Método eliminado exitosamente');
-      
+
     } catch (err) {
       showError(err, 'eliminar método');
     } finally {
@@ -439,48 +596,79 @@ const PayMethod = () => {
     e.preventDefault();
     try {
       setModalLoading(true);
-      
-      const methodId = selectedMethod.id;
-      console.log('📤 Actualizando asignaciones reales para método:', methodId);
-      
+
+      const methodId = Number(selectedMethod.id); // ✅ ASEGURAR QUE SEA NÚMERO
+      console.log('📤 Actualizando asignaciones reales para método:', methodId, typeof methodId);
+
       // 1. Obtener relaciones actuales
-      const currentRelations = payMethodApps.filter(relation => 
-        relation.method_id === methodId
+      const currentRelations = payMethodApps.filter(relation =>
+        Number(relation.method_id) === methodId
       );
-      
+
+      console.log('🔍 Relaciones actuales encontradas:', currentRelations.length);
+
       // 2. Eliminar relaciones que ya no están seleccionadas
-      const relationsToDelete = currentRelations.filter(relation => 
-        !selectedApps.includes(relation.app_id)
+      const relationsToDelete = currentRelations.filter(relation =>
+        !selectedApps.includes(Number(relation.app_id))
       );
-      
+
+      console.log('🗑️ Relaciones a eliminar:', relationsToDelete.length);
+
       for (const relation of relationsToDelete) {
-        await PayMethodAppUtils.deleteRelation(relation.paymethod_app_id);
-        console.log('🗑️ Relación eliminada:', relation.paymethod_app_id);
+        try {
+          await PayMethodAppUtils.deleteRelation(relation.paymethod_app_id);
+          console.log('✅ Relación eliminada:', relation.paymethod_app_id);
+        } catch (deleteError) {
+          console.error('❌ Error eliminando relación:', deleteError);
+          throw deleteError;
+        }
       }
-      
+
       // 3. Crear nuevas relaciones
-      const currentAppIds = currentRelations.map(r => r.app_id);
-      const newAppIds = selectedApps.filter(appId => 
-        !currentAppIds.includes(appId)
+      const currentAppIds = currentRelations.map(r => Number(r.app_id));
+      const newAppIds = selectedApps.filter(appId =>
+        !currentAppIds.includes(Number(appId))
       );
-      
+
+      console.log('➕ Nuevas relaciones a crear:', newAppIds.length);
+      console.log('➕ newAppIds array:', newAppIds);
+      console.log('➕ methodId para usar:', methodId, typeof methodId);
+
       for (const appId of newAppIds) {
-        await PayMethodAppUtils.createRelation({
-          method_id: methodId,
-          app_id: appId
-        });
-        console.log('➕ Nueva relación creada: método', methodId, '- app', appId);
+        console.log('🔄 PROCESANDO appId en ASSIGN:', appId, typeof appId);
+        console.log('🔄 methodId para usar:', methodId, typeof methodId);
+
+        try {
+          // ✅ USAR FUNCIÓN PARA CREAR PAYLOAD LIMPIO
+          const cleanPayload = createCleanRelationPayload(methodId, appId);
+
+          // ✅ VALIDAR DATOS ADICIONAL
+          const validatedData = validateRelationData(cleanPayload);
+          console.log('✅ Datos finales validados en ASSIGN:', validatedData);
+
+          // ✅ LLAMADA DIRECTA A PayMethodAppUtils con parámetros correctos
+          console.log('📡 LLAMANDO PayMethodAppUtils.createRelation con parámetros separados');
+          const relationResult = await PayMethodAppUtils.createRelation(validatedData.method_id, validatedData.app_id);
+          console.log('✅ Respuesta de PayMethodAppUtils.createRelation en ASSIGN:', relationResult);
+        } catch (createError) {
+          console.error('❌ Error creando relación en ASSIGN:', createError);
+          console.error('❌ methodId era:', methodId, typeof methodId);
+          console.error('❌ appId era:', appId, typeof appId);
+          console.error('❌ createError.config:', createError.config);
+          throw createError;
+        }
       }
-      
+
       console.log('✅ Asignaciones actualizadas exitosamente');
-      
+
       // Recargar datos
       await initializeComponent();
-      
+
       closeModals();
       alert(`Aplicaciones asignadas exitosamente al método "${selectedMethod.name}"`);
-      
+
     } catch (err) {
+      console.error('❌ Error completo en handleAssignSubmit:', err);
       showError(err, 'asignar aplicaciones');
     } finally {
       setModalLoading(false);
@@ -488,8 +676,8 @@ const PayMethod = () => {
   }, [selectedMethod, selectedApps, payMethodApps]);
 
   const handleToggleApp = useCallback((appId) => {
-    setSelectedApps(prev => 
-      prev.includes(appId) 
+    setSelectedApps(prev =>
+      prev.includes(appId)
         ? prev.filter(id => id !== appId)
         : [...prev, appId]
     );
@@ -497,16 +685,16 @@ const PayMethod = () => {
 
   const handleToggleStatus = useCallback(async (methodId, currentStatus) => {
     const newStatus = currentStatus === 'activo' ? 'inactivo' : 'activo';
-    
+
     try {
       console.log('📤 Cambiando estado del método:', methodId, 'a', newStatus);
-      
+
       await MethodUtils.changeMethodStatus(methodId, newStatus);
       console.log('✅ Estado cambiado exitosamente');
-      
+
       // Recargar datos
       await initializeComponent();
-      
+
     } catch (err) {
       showError(err, 'cambiar estado del método');
     }
@@ -514,7 +702,7 @@ const PayMethod = () => {
 
   const getStatusBadge = useCallback((status) => {
     const statusLower = status?.toLowerCase() || '';
-    
+
     switch (statusLower) {
       case 'activo':
         return 'bg-green-100 text-green-800';
@@ -530,7 +718,7 @@ const PayMethod = () => {
 
   const getMethodIcon = useCallback((name, type) => {
     const methodName = (name || '').toLowerCase();
-    
+
     if (methodName.includes('visa')) {
       return { bg: 'bg-blue-100', color: 'bg-blue-600', text: 'VISA' };
     } else if (methodName.includes('mastercard') || methodName.includes('master')) {
@@ -546,7 +734,7 @@ const PayMethod = () => {
     } else if (type === 'Sin estado') {
       return { bg: 'bg-gray-100', color: 'bg-gray-600', text: 'SE' };
     } else {
-      const fallbackText = methodName.length >= 2 
+      const fallbackText = methodName.length >= 2
         ? methodName.substring(0, 2).toUpperCase()
         : (methodName.charAt(0)?.toUpperCase() || 'MP');
       return { bg: 'bg-purple-100', color: 'bg-purple-600', text: fallbackText };
@@ -555,9 +743,9 @@ const PayMethod = () => {
 
   // ✅ CORREGIDO: Modal para crear método
   const CreateMethodModal = () => (
-    <Modal 
-      isOpen={showCreateModal} 
-      onClose={closeModals} 
+    <Modal
+      isOpen={showCreateModal}
+      onClose={closeModals}
       title="Crear Nuevo Método de Pago"
       size="lg"
     >
@@ -627,7 +815,7 @@ const PayMethod = () => {
                   disabled={modalLoading}
                 />
                 <span className="text-sm text-gray-700">
-                  {app.name_app || app.name} 
+                  {app.name_app || app.name}
                   <span className="text-gray-500">
                     ({app.api_key ? `${app.api_key.substring(0, 8)}...` : 'Sin API Key'})
                   </span>
@@ -674,9 +862,9 @@ const PayMethod = () => {
 
   // Modal para editar método
   const EditMethodModal = () => (
-    <Modal 
-      isOpen={showEditModal} 
-      onClose={closeModals} 
+    <Modal
+      isOpen={showEditModal}
+      onClose={closeModals}
       title="Editar Método de Pago"
       size="lg"
     >
@@ -759,9 +947,9 @@ const PayMethod = () => {
 
   // Modal para asignación de aplicaciones
   const AssignAppsModal = () => (
-    <Modal 
-      isOpen={showAssignModal} 
-      onClose={closeModals} 
+    <Modal
+      isOpen={showAssignModal}
+      onClose={closeModals}
       title={`Asignar Aplicaciones - ${selectedMethod?.name}`}
       size="lg"
     >
@@ -827,9 +1015,9 @@ const PayMethod = () => {
 
   // Modal para confirmación de eliminación
   const DeleteConfirmModal = () => (
-    <Modal 
-      isOpen={showDeleteModal} 
-      onClose={closeModals} 
+    <Modal
+      isOpen={showDeleteModal}
+      onClose={closeModals}
       title="Confirmar Eliminación"
       size="sm"
     >
@@ -907,7 +1095,7 @@ const PayMethod = () => {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar datos</h3>
             <p className="text-gray-600 mb-4">{error}</p>
-            <button 
+            <button
               onClick={initializeComponent}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
             >
@@ -942,7 +1130,7 @@ const PayMethod = () => {
             {combinedData.length} método{combinedData.length !== 1 ? 's' : ''} encontrado{combinedData.length !== 1 ? 's' : ''} • {apps.filter(app => app.active === '1' || app.active === 1).length} aplicacion{apps.filter(app => app.active === '1' || app.active === 1).length !== 1 ? 'es activas' : ' activa'}
           </p>
         </div>
-        <button 
+        <button
           onClick={openCreateModal}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition duration-200 transform hover:scale-105"
         >
@@ -1018,13 +1206,12 @@ const PayMethod = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          method.type === 'Global' 
-                            ? 'bg-green-100 text-green-800' 
-                            : method.type === 'Sin estado'
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${method.type === 'Global'
+                          ? 'bg-green-100 text-green-800'
+                          : method.type === 'Sin estado'
                             ? 'bg-gray-100 text-gray-800'
                             : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                          }`}>
                           {method.type}
                         </span>
                       </td>
@@ -1063,23 +1250,23 @@ const PayMethod = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-1">
-                          <button 
+                          <button
                             onClick={() => openEditModal(method)}
-                            className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition-colors" 
+                            className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition-colors"
                             title="Editar método"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => openAssignModal(method)}
-                            className="text-green-600 hover:text-green-900 p-2 rounded-full hover:bg-green-50 transition-colors" 
+                            className="text-green-600 hover:text-green-900 p-2 rounded-full hover:bg-green-50 transition-colors"
                             title="Asignar aplicaciones"
                           >
                             <Link className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => openDeleteModal(method)}
-                            className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition-colors" 
+                            className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition-colors"
                             title="Eliminar método"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1098,14 +1285,14 @@ const PayMethod = () => {
         {totalPages > 1 && (
           <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
             <div className="flex-1 flex justify-between sm:hidden">
-              <button 
+              <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 Anterior
               </button>
-              <button 
+              <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
@@ -1130,24 +1317,23 @@ const PayMethod = () => {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  
+
                   {[...Array(Math.min(5, totalPages))].map((_, index) => {
                     const pageNumber = index + 1;
                     return (
                       <button
                         key={pageNumber}
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === pageNumber
-                            ? 'bg-blue-50 border-blue-500 text-blue-600 z-10'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNumber
+                          ? 'bg-blue-50 border-blue-500 text-blue-600 z-10'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
                         {pageNumber}
                       </button>
                     );
                   })}
-                  
+
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
