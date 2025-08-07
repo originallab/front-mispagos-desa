@@ -5,7 +5,7 @@ import PaymentMethod from '../components/paymethod/paymentMethod';
 import Application from '../components/Application/application';
 import UserPermissions from '../components/UserPermison/userPermisson';
 import Header from '../components/Header/Header';
-
+import AppCharts from '../components/AppCharts/AppCharts.jsx';
 
 
 const Layout = () => {
@@ -19,7 +19,7 @@ const Layout = () => {
         <Dashboard />
         <PaymentMethod />
         <Application />
-        <UserPermissions />
+        <UserPermissions/>
       </div>
     </div>
   );
