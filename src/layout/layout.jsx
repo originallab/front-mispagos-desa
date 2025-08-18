@@ -5,6 +5,7 @@ import PaymentMethod from '../components/paymethod/paymentMethod';
 import Application from '../components/Application/application';
 import UserPermissions from '../components/UserPermison/userPermisson';
 import Header from '../components/Header/Header';
+<<<<<<< HEAD
 import UsePayment from '../components/UsePayment/UsePayment';
 import { Import } from 'lucide-react';
 import TransactionsChart from '../components/TransactionsChart/TransactionsChart';
@@ -13,6 +14,9 @@ import AppCharts from '../components/AppCharts/AppCharts.jsx';
 import ApplicationManagement from '../components/ApplicationManagement/ApplicationManagement.jsx';
 import AnalyticsUser from '../components/AnalyticsUser/AnalyticsUser.jsx';
 import UsersManagement from '../components/UsersManagement/UsersManagement.jsx';
+=======
+
+>>>>>>> 494fbf69699b831bccc5ae09b0f945fd6272c085
 
 const Layout = () => {
   // Estado para controlar qué vista está activa
