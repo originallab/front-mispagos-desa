@@ -82,7 +82,7 @@ const AnalyticsUser = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 ">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
         
         {/* Gráfico de Usuarios por Mes y Apps */}

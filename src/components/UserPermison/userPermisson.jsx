@@ -174,34 +174,7 @@ const UserPermissionComponent = () => {
                     Permisos de Usuario
                 </h1>
                 
-                {formattedStats && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                            <div className="text-2xl font-bold text-blue-600">
-                                {formattedStats.users.total}
-                            </div>
-                            <div className="text-sm text-gray-600">Total Usuarios</div>
-                        </div>
-                        <div className="bg-green-50 p-4 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600">
-                                {formattedStats.users.withApps}
-                            </div>
-                            <div className="text-sm text-gray-600">Con Aplicaciones</div>
-                        </div>
-                        <div className="bg-purple-50 p-4 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-600">
-                                {formattedStats.apps.total}
-                            </div>
-                            <div className="text-sm text-gray-600">Total Apps</div>
-                        </div>
-                        <div className="bg-orange-50 p-4 rounded-lg">
-                            <div className="text-2xl font-bold text-orange-600">
-                                {formattedStats.relations.total}
-                            </div>
-                            <div className="text-sm text-gray-600">Vinculaciones</div>
-                        </div>
-                    </div>
-                )}
+               
             </div>
 
             {/* Controles de búsqueda y filtros */}

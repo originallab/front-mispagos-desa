@@ -1109,16 +1109,7 @@ const PayMethod = () => {
 
   return (
     <div className="mb-8">
-      {/* Header con información del sistema */}
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-700">
-          <strong>Usuario:</strong> {user?.email || 'No disponible'} (ID: {user?.user_id || 'N/A'})
-          <br />
-          <strong>Estado de la API:</strong> Conectada ✅
-          <br />
-          <strong>Datos cargados:</strong> {methods.length} métodos de pago • {apps.length} aplicaciones • {payMethodApps.length} relaciones reales
-        </p>
-      </div>
+     
 
       <div className="flex justify-between items-center mb-6">
         <div>

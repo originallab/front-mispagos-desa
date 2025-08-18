@@ -1,1 +1,1 @@
-export {default} from './usePayment.jsx';
+export {default} from './UsePayment.jsx';

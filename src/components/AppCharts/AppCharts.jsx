@@ -65,7 +65,7 @@ const AppCharts = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="bg-gray-50 p-8">
       <div className="flex flex-wrap gap-8 justify-center items-start">
         <BarChart
           title="Ingresos Mensuales"
