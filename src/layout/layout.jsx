@@ -5,10 +5,14 @@ import PaymentMethod from '../components/paymethod/paymentMethod';
 import Application from '../components/Application/application';
 import UserPermissions from '../components/UserPermison/userPermisson';
 import Header from '../components/Header/Header';
-import UsePayment from '../components/usePayment/usePayment';
+import UsePayment from '../components/UsePayment/UsePayment';
 import { Import } from 'lucide-react';
 import TransactionsChart from '../components/TransactionsChart/TransactionsChart';
 import PaymentMethodsTable from '../components/PaymentMethodsTable/PaymentMethodsTable';
+import AppCharts from '../components/AppCharts/AppCharts.jsx';
+import ApplicationManagement from '../components/ApplicationManagement/ApplicationManagement.jsx';
+import AnalyticsUser from '../components/AnalyticsUser/AnalyticsUser.jsx';
+import UsersManagement from '../components/UsersManagement/UsersManagement.jsx';
 
 const Layout = () => {
   // Estado para controlar qué vista está activa
@@ -42,6 +46,7 @@ const Layout = () => {
             <>
               <div className="flex flex-col flex-1">
                 <Header />
+                
               </div>
               
               {/* Container principal con padding */}
@@ -55,7 +60,7 @@ const Layout = () => {
                 
                 {/* Tabla a ancho completo */}
                 <div className="w-full">
-                  <PaymentMethodsTable />
+                  <PaymentMethod />
                 </div>
                 
               </div>
@@ -68,11 +73,12 @@ const Layout = () => {
           <>
             <div className="flex flex-col flex-1">
               <Header />
+              
             </div>
+            <AppCharts />
+              <ApplicationManagement/>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-600 mb-2">Aplicaciones</h2>
-                <p className="text-gray-500">Contenido en desarrollo...</p>
               </div>
             </div>
           </>
@@ -85,10 +91,10 @@ const Layout = () => {
             <div className="flex flex-col flex-1">
               <Header />
             </div>
+            <AnalyticsUser/>
+            <UsersManagement/>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-600 mb-2">Permisos de Usuario</h2>
-                <p className="text-gray-500">Contenido en desarrollo...</p>
               </div>
             </div>
           </>
@@ -118,6 +124,7 @@ const Layout = () => {
       />
       
       <div className="flex-1 p-6 bg-gray-100 overflow-y-auto flex flex-col">
+
         {renderContent()}
       </div>
     </div>
