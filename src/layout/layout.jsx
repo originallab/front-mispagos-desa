@@ -5,7 +5,6 @@ import PaymentMethod from '../components/paymethod/paymentMethod';
 import Application from '../components/Application/application';
 import UserPermissions from '../components/UserPermison/userPermisson';
 import Header from '../components/Header/Header';
-<<<<<<< HEAD
 import UsePayment from '../components/UsePayment/UsePayment';
 import { Import } from 'lucide-react';
 import TransactionsChart from '../components/TransactionsChart/TransactionsChart';
@@ -14,9 +13,9 @@ import AppCharts from '../components/AppCharts/AppCharts.jsx';
 import ApplicationManagement from '../components/ApplicationManagement/ApplicationManagement.jsx';
 import AnalyticsUser from '../components/AnalyticsUser/AnalyticsUser.jsx';
 import UsersManagement from '../components/UsersManagement/UsersManagement.jsx';
-=======
-
->>>>>>> 494fbf69699b831bccc5ae09b0f945fd6272c085
+import ProfileHeader from '../components/ProfileHeader/profileHeader.jsx';
+import RolePermissions from '../components/RolePermisson/rolePermisson.jsx';
+import PersonalInfoSection from '../components/PersonalInfoSection/personalInfoSection.jsx';
 
 const Layout = () => {
   // Estado para controlar qué vista está activa
@@ -80,7 +79,7 @@ const Layout = () => {
               
             </div>
             <AppCharts />
-              <ApplicationManagement/>
+            <ApplicationManagement/>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
               </div>
@@ -89,7 +88,7 @@ const Layout = () => {
         );
 
       case 'user-permissions':
-        // Vista Permisos de Usuario: Solo Header + espacio vacío
+        // Vista Permisos de Usuario
         return (
           <>
             <div className="flex flex-col flex-1">
@@ -97,6 +96,22 @@ const Layout = () => {
             </div>
             <AnalyticsUser/>
             <UsersManagement/>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+              </div>
+            </div>
+          </>
+        );
+
+        case 'perfil':
+        // Vista Perfil
+        return (
+          <>
+            <div className="flex flex-col flex-1">
+              <ProfileHeader/>
+            </div>
+            <PersonalInfoSection/>
+            <RolePermissions/>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
               </div>

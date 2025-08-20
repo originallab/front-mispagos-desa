@@ -81,17 +81,12 @@ const Sidebar = ({ activeView, onViewChange }) => {
           <span>Permisos de Usuario</span>
         </div>
         
-        <div className="px-4 py-2 mt-6 text-gray-300 uppercase text-xs font-semibold">Configuración</div>
-        
-        {/* Configuración */}
-        <div className="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 flex items-center space-x-2 cursor-pointer">
-          <Settings className="h-5 w-5" />
-          <span>Configuración</span>
-        </div>
-        
         {/* Perfil */}
-        <div className="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 flex items-center space-x-2 cursor-pointer">
+        <div className={getMenuItemClasses('perfil')}
+          onClick={() => handleMenuClick('perfil')}>
           <User className="h-5 w-5" />
+          
+
           <span>Perfil</span>
         </div>
         

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProfileService } from '../../Api/services/ProfileService';
+import { ProfileService } from '../../Api/services/profileService.js';
 import { ProfileUtils } from '../../Api/utils/profileUtils';
 
 const ProfileHeader = ({ 
