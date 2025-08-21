@@ -6,7 +6,7 @@
  * @returns {Promise<Object>} Respuesta de la API
  */
 export const apiCall = async (endpoint, data = {}, options = {}) => {
-    const url = `${"https://theoriginallab-api-automatizacionestol-prod.m0oqwu.easypanel.host"}${endpoint}`;
+    const url = `${"https://theoriginallab-api-mispagos-desa.m0oqwu.easypanel.host"}${endpoint}`;
     
     const defaultOptions = {
       method: 'POST',
