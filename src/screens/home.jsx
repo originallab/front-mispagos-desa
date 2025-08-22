@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import postIcon from '../assets/images/post.svg';
+import generadorIcon from '../assets/images/generadordeLogos.svg';
 
-const PaymentControlSite = () => {
+const HomeControl = () => {
   // Estados
   const [activeTab, setActiveTab] = useState('pagos');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -13,20 +15,20 @@ const PaymentControlSite = () => {
   // Datos del Marketplace
   const marketData = [
     { 
-      id:'m1', 
-      name:'Publicaciones Pro', 
-      price:'$9/mes', 
-      icon:'📰', 
-      desc:'Programa y publica en redes fácilmente.',
-      features: ['Programación automática', 'Analytics avanzados', 'Multi-plataforma', 'API integrada'],
-      rating: 4.8,
-      users: '2.3k'
-    },
+        id:'m1', 
+        name:'Generador de post', 
+        price:'$39.96 USD/mes', 
+        icon: postIcon,  // 👈 ya no string
+        desc:'Programa y publica en redes fácilmente.',
+        features: ['Integracion con un inventario', 'Uso de Inteligencia artificial', 'Plantillas'],
+        rating: 4.8,
+        users: '2.3k'
+      },
     { 
       id:'m2', 
-      name:'Logo Maker', 
+      name: 'Generador de Logos', 
       price:'$12/mes', 
-      icon:'🎨', 
+      icon:generadorIcon, 
       desc:'Crea logos en segundos con IA.',
       features: ['IA generativa', 'Vectores HD', 'Marca completa', 'Exportación múltiple'],
       rating: 4.9,
@@ -590,9 +592,8 @@ const PaymentControlSite = () => {
                     <div className="flex-1 pr-8">
                       <div className={`w-full h-80 rounded-2xl ${lightTheme ? 'bg-slate-200' : 'bg-slate-700/50'} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden`}>
                         <div className="text-center">
-                          <div className="text-6xl mb-4">{item.icon}</div>
-                          <div className={`text-lg font-medium ${lightTheme ? 'text-slate-600' : 'text-white/70'}`}>Vista previa del sitio web</div>
-                          <div className={`text-sm ${lightTheme ? 'text-slate-500' : 'text-white/50'} mt-2`}>Interfaz interactiva de {item.name}</div>
+                        <img src={item.icon} />
+                         
                         </div>
                       </div>
                       
@@ -830,4 +831,4 @@ const PaymentControlSite = () => {
   );
 };
 
-export default PaymentControlSite;
+export default HomeControl;

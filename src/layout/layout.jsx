@@ -16,6 +16,7 @@ import UsersManagement from '../components/UsersManagement/UsersManagement.jsx';
 import ProfileHeader from '../components/ProfileHeader/profileHeader.jsx';
 import RolePermissions from '../components/RolePermisson/rolePermisson.jsx';
 import PersonalInfoSection from '../components/PersonalInfoSection/personalInfoSection.jsx';
+import HomeControl from '../screens/home.jsx';
 
 const Layout = () => {
   // Estado para controlar qué vista está activa
@@ -119,17 +120,19 @@ const Layout = () => {
           </>
         );
 
+        case 'home':
+        // Vista Aplicaciones: Solo Header + espacio vacío
+        return (
+          <>
+            <HomeControl/>
+          </>
+        );
+
       default:
         // Por defecto muestra Dashboard
         return (
           <>
-            <div className="flex flex-col flex-1">
-              <Header />
-            </div>
-            <Dashboard />
-            <PaymentMethod />
-            <Application />
-            <UserPermissions />
+            <HomeControl/>
           </>
         );
     }
